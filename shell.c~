@@ -1,0 +1,29 @@
+#include <stdlib.h>
+#include <stdio.h>
+
+#include <string.h>
+#include <unistd.h>
+
+int isExit(char *command) {
+  char s[] = "exit";
+  if (strcmp(command,&s) == 0) {
+      return 1;
+  }
+  return 0;
+}
+
+int isLs(char *command) {
+  char s[] = "ls";
+  
+  if (strcmp(command,&s) == 0) {
+      return 1;
+  }
+  return 0;
+}
+
+int main(int argc, char * argv[]) {
+  printf( "argc = %d\n", argc );
+  for( int i = 0; i < argc; ++i ) {
+    printf( "argv[ %d ] = %s\n", i, argv[ i ] );
+  }
+}
