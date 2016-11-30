@@ -10,7 +10,7 @@ int isExit(char *command) {
   char *p;
   p = "exit";
   if (strcmp(command,p) == 0) {
-      return 1;
+	  return 1;
   }
   return 0;
 }
@@ -19,7 +19,7 @@ int isCd(char *command) {
   char *p;
   p = "cd";
   if (strcmp(command,p) == 0) {
-    return 1;
+	return 1;
   }
   return 0;
 }
@@ -35,63 +35,74 @@ void printPrompt() {
   printf("%s@%s:%s$ ",username,hostname,cwd);
 }
 
-void exec() {
-  char buffer[100];
-  while (fgets(buffer, 100, stdin) == NULL) {}
-  
-  char *s = buffer;
-  char *command[100];
-
-  int i = 0;
-  while (buffer[i] != '\n' && buffer[i] != 0) {
-    i++;
-  }
-  buffer[i] = 0;
-
-  i = 0;
-  while (s) {
-    command[i] = strsep(&s," ");
-    if (strcmp(command[i],"\n") == 0) {
-      command[i] = 0;
-    }
-    i++;
-  }
-  command[i] = 0;
-
-  if (isExit(command[0])) {
-    exit(0);
-  }
-
-  else if (isCd(command[0])) {
-    if (command[1]) {
-      int err = chdir(command[1]);
-      if (err == -1) {
-      	printf("Error: %d, %s\n",errno,strerror(errno));
-      }
-    }
-    else {
-      chdir("cd");
-    }
-  }
-
-  else {
-  	int f = fork();
-  	if (f == 0) {
-    	int err = execvp(command[0], command);
-    	if (err == -1) {
-      		printf("Error: %d, %s\n",errno,strerror(errno));
-    	}
-    	exit(0);
-  	}
-  	else {
-    	wait(NULL);
-  	}
-  }	
+void getBuffer(char * retBuff) {
+	char * buffer = calloc(100,sizeof(char));
+  	while (fgets(buffer, 100, stdin) == NULL) {}
+	int i = 0;
+	while (buffer[i] != '\n' && buffer[i] != 0) {
+		i++;
+	}
+	buffer[i] = 0;
+	strncpy(retBuff,buffer,1023);
 }
+
+char ** splitBySemicolon(char * buffer) {
+	return 0;
+}
+
+char ** splitBySpace(char * buffer) {
+	char **command;
+	
+  	int i = 0;
+  	while (buffer) {
+		command[i] = strsep(&buffer," ");
+		if (strcmp(command[i],"\n") == 0) {
+	  		command[i] = 0;
+		}
+		i++;
+  	}
+  	command[i] = 0;
+  	
+  	return command;
+}
+
+void exec1(char ** command) {
+	if (isExit(command[0])) {
+		exit(0);
+  	}
+
+  	else if (isCd(command[0])) {
+		if (command[1]) {
+	  		int err = chdir(command[1]);
+	  	if (err == -1) {
+			printf("Error: %d, %s\n",errno,strerror(errno));
+	  	}
+		}
+		else {
+			chdir("cd");
+		}
+	}
+
+	else {
+		int f = fork();
+		if (f == 0) {
+			int err = execvp(command[0], command);
+			if (err == -1) {
+				printf("Error: %d, %s\n",errno,strerror(errno));
+			}
+			exit(0);
+		}
+		else {
+			wait(NULL);
+		}
+	} 
+}
+
 int main() {
-  int exit = 0;
-  while (exit == 0) {
-    printPrompt();
-    exec();
+  while (1) {
+	printPrompt();
+	char * buffer;
+	getBuffer(buffer);
+	exec1(splitBySpace(buffer));
   }
 }
