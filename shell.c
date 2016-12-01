@@ -3,6 +3,7 @@
 
 #include <string.h>
 #include <unistd.h>
+#include <fcntl.h>
 
 #include <errno.h>
 
@@ -74,6 +75,7 @@ int count(char * str, char toCount) {
 		if (str[i] == toCount) {
 			counter++;
 		}
+		i++;
     }
     return counter;
 }
@@ -153,10 +155,38 @@ void run() {
 	int i = 0;
 	char **s = splitBySemicolon(p);
 	while (s[i]) {
-		char *s2 = s[i];
-		char **commands = splitBySpace(s2);
-		exec1(commands);
-		wait(0);
+		if (redirectCheck(s[i]) > 1) { //case 1: too much redirection
+			printf("Too many > or < characters. Try again.\n");
+		} else if (redirectCheck(s[i]) == 0) { //case 2: no redirection
+			char *s2 = s[i];
+			char **commands = splitBySpace(s2);
+			exec1(commands);
+		} else { //case 3: redirection
+			if (redirectCheck(s[i]) == -1) { // < redirection
+				
+			} else { // > redirection
+				char *s2 = s[i];
+				char **commands = splitBySpace(s2);
+				int j = 0;
+				int redirPos;
+				while (commands[j]) {
+					if (strcmp(commands[j],">") == 0) {
+						redirPos = j;
+						break;
+					}
+					j++;
+				}
+				int fd = open(commands[redirPos+1],O_RDWR|O_CREAT,0774);
+				if (fd == -1) {
+					printf("Error: %d, %s\n",errno,strerror(errno));
+				}
+				int stdoutNew = dup(1);
+				dup2(fd,1);
+				commands[redirPos] = 0;
+				exec1(commands);
+				dup2(stdoutNew,1);
+			}
+		}
 		i++;
 	}
 }
