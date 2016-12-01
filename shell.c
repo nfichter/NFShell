@@ -20,36 +20,50 @@ void printPrompt() {
 
 //Gets input, copies it to the given buffer
 void getBuffer(char * retBuff) {
-	char * buffer = calloc(100,sizeof(char));
-  	while (fgets(buffer, 100, stdin) == NULL) {}
+	char * buffer = calloc(1024,sizeof(char));
+  	fgets(buffer, 1024, stdin);
 	int i = 0;
-	while (buffer[i] != '\n' && buffer[i] != 0) {
-		i++;
+	while (buffer[i] != 0) {
+		if (buffer[i] == '\n') {
+			buffer[i] = 0;
+		} else {
+			i++;
+		}
 	}
-	buffer[i] = 0;
-	strncpy(retBuff,buffer,1023);
+	strncpy(retBuff,buffer,1024);
 	free(buffer);
 }
 
 //Splits the buffer by semicolons into strings to be split by spaces
 char ** splitBySemicolon(char * buffer) {
-	return 0;
+	char ** commandsSplitBySemicolon;
+	char * p = buffer;
+	int i = 0;
+	while (p) {
+		commandsSplitBySemicolon[i] = strsep(&p,";");
+		i++;
+	}
+	commandsSplitBySemicolon[i] = 0;
+	
+	return commandsSplitBySemicolon;
 }
 
 //Splits one command's string by spaces
 char ** splitBySpace(char * buffer) {
-	char **command;
+	char **commandsSplitBySpace = (char **)calloc(20,sizeof(char[1024]));
   	int i = 0;
-  	while (buffer) {
-		command[i] = strsep(&buffer," ");
-		if (strcmp(command[i],"\n") == 0) {
-	  		command[i] = 0;
+  	char * p = strdup(buffer);
+  	while (p) {
+  		commandsSplitBySpace[i] = (char *)calloc(64,sizeof(char));
+		commandsSplitBySpace[i] = strsep(&p," ");
+		if (strcmp(commandsSplitBySpace[i],"\n") == 0) {
+	  		commandsSplitBySpace[i] = 0;
 		}
 		i++;
   	}
-  	command[i] = 0;
+  	commandsSplitBySpace[i] = 0;
   	
-  	return command;
+  	return commandsSplitBySpace;
 }
 
 //Helper function that checks if the function is exit
@@ -105,11 +119,24 @@ void exec1(char ** command) {
 	} 
 }
 
-int main() {
-  while (1) {
+void run() {
 	printPrompt();
-	char * buffer = calloc(1024,sizeof(char));
-	getBuffer(buffer);
-	exec1(splitBySpace(buffer));
-  }
+	char buffer[1024];
+	char *p = buffer;
+	getBuffer(p);
+	int i = 0;
+	char **s = splitBySemicolon(p);
+	while (s[i]) {
+		char *s2 = s[i];
+		char **commands = splitBySpace(s2);
+		exec1(commands);
+		wait(0);
+		i++;
+	}
+}
+
+int main() {
+  	while (1) {
+  		run();
+  	}
 }
