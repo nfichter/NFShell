@@ -66,6 +66,34 @@ char ** splitBySpace(char * buffer) {
   	return commandsSplitBySpace;
 }
 
+//Helper function to check for the number of characters in a string
+int count(char * str, char toCount) {
+	int i = 0;
+	int counter = 0;
+	while (str[i]) {
+		if (str[i] == toCount) {
+			counter++;
+		}
+    }
+    return counter;
+}
+
+//Checks for redirection, returns -1 if <, 1 if >, 0 if neither, and 2+ if too many (will cause error)
+int redirectCheck(char *command) {
+	int sum = count(command,'<') + count(command,'>');
+	if (sum == 0 || sum > 1) {
+		return sum;
+	}
+	if (sum == 1) {
+		if (count(command,'<') == 1) {
+			return -1;
+		} else {
+			return 1;
+		}
+	}
+	return 0;
+}
+
 //Helper function that checks if the function is exit
 int isExit(char *command) {
   char *p;
@@ -91,7 +119,6 @@ void exec1(char ** command) {
 	if (isExit(command[0])) {
 		exit(0);
   	}
-
   	else if (isCd(command[0])) {
 		if (command[1]) {
 	  		int err = chdir(command[1]);
@@ -103,7 +130,6 @@ void exec1(char ** command) {
 			chdir("cd");
 		}
 	}
-
 	else {
 		int f = fork();
 		if (f == 0) {
