@@ -133,13 +133,13 @@ int isCd(char *command) {
 }
 
 //Executes one command (including flags)
-void exec1(char ** command) {
-	if (isExit(command[0])) {
+void exec1(char ** fullCommand) {
+	if (isExit(fullCommand[0])) {
 		exit(0);
   	}
-  	else if (isCd(command[0])) {
-		if (command[1]) {
-	  		int err = chdir(command[1]);
+  	else if (isCd(fullCommand[0])) {
+		if (fullCommand[1]) {
+	  		int err = chdir(fullCommand[1]);
 	  	if (err == -1) {
 			printf("Error: %d, %s\n",errno,strerror(errno));
 	  	}
@@ -151,7 +151,7 @@ void exec1(char ** command) {
 	else {
 		int f = fork();
 		if (f == 0) {
-			int err = execvp(command[0], command);
+			int err = execvp(fullCommand[0], fullCommand);
 			if (err == -1) {
 				printf("Error: %d, %s\n",errno,strerror(errno));
 			}
