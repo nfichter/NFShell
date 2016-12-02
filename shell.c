@@ -44,6 +44,9 @@ char ** splitBySemicolon(char * buffer) {
 	int i = 0;
 	while (p) {
 		commandsSplitBySemicolon[i] = strsep(&p,";");
+		if (strcmp(commandsSplitBySemicolon[i],"") == 0) {
+			i--;
+		}
 		i++;
 	}
 	commandsSplitBySemicolon[i] = 0;
@@ -59,7 +62,9 @@ char ** splitBySpace(char * buffer) {
   	while (p) {
   		commandsSplitBySpace[i] = (char *)calloc(64,sizeof(char));
 		commandsSplitBySpace[i] = strsep(&p," ");
-		if (strcmp(commandsSplitBySpace[i],"\n") == 0) {
+		if (strcmp(commandsSplitBySpace[i],"") == 0) {
+			i--;
+		} else if (strcmp(commandsSplitBySpace[i],"\n") == 0) {
 	  		commandsSplitBySpace[i] = 0;
 		}
 		i++;
@@ -105,22 +110,26 @@ int redirectCheck(char *command) {
 
 //Helper function that checks if the function is exit
 int isExit(char *command) {
-  char *p;
-  p = "exit";
-  if (strcmp(command,p) == 0) {
-	  return 1;
-  }
-  return 0;
+  	char *p;
+  	p = "exit";
+  	if (command != 0) {
+		if (strcmp(command,p) == 0) {
+			return 1;
+		}
+	}
+	return 0;
 }
 
 //Helper function that checks if the function is cd
 int isCd(char *command) {
-  char *p;
-  p = "cd";
-  if (strcmp(command,p) == 0) {
-	return 1;
-  }
-  return 0;
+	char *p;
+	p = "cd";
+  	if (command != 0) {
+		if (strcmp(command,p) == 0) {
+			return 1;
+		}
+	}
+	return 0;
 }
 
 //Executes one command (including flags)
@@ -170,18 +179,31 @@ void piper(char **commands, char *s2) {
 			}
 			j++;
 		}
-		int fd = open("tmp.txt",O_CREAT,0774);
+		int fd = open("tmp.txt",O_CREAT|O_RDWR,0774);
 		if (fd == -1) {
 			printf("Error: %d, %s\n",errno,strerror(errno));
 		}
-		commands += pipePos+1;
+		commands[pipePos] = 0;
 		int stdoutNew = dup(1);
 		dup2(fd,1);
-		//exec them into tmp.txt
+		exec1(commands);
 		dup2(stdoutNew,1);
+		close(fd);
+		fd = open("tmp.txt",O_RDWR,0774);
+		if (fd == -1) {
+			printf("Error: %d, %s\n",errno,strerror(errno));
+		}
+		int stdinNew = dup(0);
+		dup2(fd,0);
+		commands+=pipePos+1;
+		commands[1] = "tmp.txt";
+		exec1(commands);
+		dup2(stdinNew,0);
+		remove("tmp.txt");
 	}
 }
 
+//Helper function to get stuff out of run()
 void redir(char *s2) {
 	if (redirectCheck(s2) > 1) { //case 1: too much redirection
 		printf("Too many > or < characters. Try again.\n");
