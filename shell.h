@@ -1,1 +1,14 @@
+void printPrompt();
+void getBuffer(char * retBuff);
+char ** splitBySemicolon(char * buffer);
+char ** splitBySpace(char * buffer);
+int count(char * str, char toCount);
+int pipeCheck(char *command);
+int redirectCheck(char *command);
+int isExit(char *command);
+int isCd(char *command);
+void exec1(char ** command);
+void piper(char **commands, char *s2);
+void redir(char *s2);
 void run();
+int main();
