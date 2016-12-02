@@ -7,6 +7,8 @@
 
 #include <errno.h>
 
+#include "shell.h"
+
 //Prints the prompt
 void printPrompt() {
   char username[1024];
@@ -80,6 +82,11 @@ int count(char * str, char toCount) {
     return counter;
 }
 
+//Checks for pipes ("|"), returns number of pipes found (2+ will cause error)
+int pipeCheck(char *command) {
+	return count(command,'|');
+}
+
 //Checks for redirection, returns -1 if <, 1 if >, 0 if neither, and 2+ if too many (will cause error)
 int redirectCheck(char *command) {
 	int sum = count(command,'<') + count(command,'>');
@@ -147,6 +154,62 @@ void exec1(char ** command) {
 	} 
 }
 
+//Helper function to get stuff out of run()
+void piper(char **commands, char *s2) {
+	if (pipeCheck(s2) > 1) {
+		printf("Too many | characters. Try again.\n");
+	} else if (pipeCheck(s2) == 0) {
+		exec1(commands);
+	} else {
+		
+	}
+}
+
+void redir(char *s2) {
+	if (redirectCheck(s2) > 1) { //case 1: too much redirection
+		printf("Too many > or < characters. Try again.\n");
+	} else if (redirectCheck(s2) == 0) { //case 2: no redirection
+		char **commands = splitBySpace(s2);
+		piper(commands,s2);
+	} else { //case 3: redirection
+		if (redirectCheck(s2) == -1) { // < redirection
+			char **commands = splitBySpace(s2);
+			if (strcmp(commands[0],"<") == 0) {
+				int fd = open(commands[1],O_RDWR|O_CREAT,0774);
+				if (fd == -1) {
+					printf("Error: %d, %s\n",errno,strerror(errno));
+				}
+				int stdinNew = dup(0);
+				dup2(fd,0);
+				run();
+				dup2(stdinNew,0);
+			} else {
+				printf("You may not put arguments before a redirection of stdin.");
+			}
+		} else { // > redirection
+			char **commands = splitBySpace(s2);
+			int j = 0;
+			int redirPos;
+			while (commands[j]) {
+				if (strcmp(commands[j],">") == 0) {
+					redirPos = j;
+					break;
+				}
+				j++;
+			}
+			int fd = open(commands[redirPos+1],O_RDWR|O_CREAT,0774);
+			if (fd == -1) {
+				printf("Error: %d, %s\n",errno,strerror(errno));
+			}
+			int stdoutNew = dup(1);
+			dup2(fd,1);
+			commands[redirPos] = 0;
+			exec1(commands);
+			dup2(stdoutNew,1);
+		}
+	}
+}
+
 void run() {
 	printPrompt();
 	char buffer[1024];
@@ -155,38 +218,8 @@ void run() {
 	int i = 0;
 	char **s = splitBySemicolon(p);
 	while (s[i]) {
-		if (redirectCheck(s[i]) > 1) { //case 1: too much redirection
-			printf("Too many > or < characters. Try again.\n");
-		} else if (redirectCheck(s[i]) == 0) { //case 2: no redirection
-			char *s2 = s[i];
-			char **commands = splitBySpace(s2);
-			exec1(commands);
-		} else { //case 3: redirection
-			if (redirectCheck(s[i]) == -1) { // < redirection
-				
-			} else { // > redirection
-				char *s2 = s[i];
-				char **commands = splitBySpace(s2);
-				int j = 0;
-				int redirPos;
-				while (commands[j]) {
-					if (strcmp(commands[j],">") == 0) {
-						redirPos = j;
-						break;
-					}
-					j++;
-				}
-				int fd = open(commands[redirPos+1],O_RDWR|O_CREAT,0774);
-				if (fd == -1) {
-					printf("Error: %d, %s\n",errno,strerror(errno));
-				}
-				int stdoutNew = dup(1);
-				dup2(fd,1);
-				commands[redirPos] = 0;
-				exec1(commands);
-				dup2(stdoutNew,1);
-			}
-		}
+		char *s2 = s[i];
+		redir(s2);
 		i++;
 	}
 }
