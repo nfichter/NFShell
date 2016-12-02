@@ -13,6 +13,8 @@ Features:
 		
 Bugs:
 	-Only one < or > may be used, same with pipes
+	-Piping creates a temporary file and doesn't delete it until after
+	the command is executed, meaning it is included in calls like ls and wc
 	
 Functions:
 	-void printPrompt();
