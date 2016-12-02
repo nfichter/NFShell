@@ -161,7 +161,24 @@ void piper(char **commands, char *s2) {
 	} else if (pipeCheck(s2) == 0) {
 		exec1(commands);
 	} else {
-		
+		int j = 0;
+		int pipePos;
+		while (commands[j]) {
+			if (strcmp(commands[j],"|") == 0) {
+				pipePos = j;
+				break;
+			}
+			j++;
+		}
+		int fd = open("tmp.txt",O_CREAT,0774);
+		if (fd == -1) {
+			printf("Error: %d, %s\n",errno,strerror(errno));
+		}
+		commands += pipePos+1;
+		int stdoutNew = dup(1);
+		dup2(fd,1);
+		//exec them into tmp.txt
+		dup2(stdoutNew,1);
 	}
 }
 
