@@ -48,10 +48,10 @@ Functions:
 	-int redirectCheck(char *command);
 	Inputs: char *command
 	Returns:
-	---- -1 if there is only one occurrence of "<" in command
-	---- 1 if there is only one occurrence of ">" in command
-	---- 0 if there are no occurrences of either "<" or ">" in command
-	---- 2 if there are 2 or more occurrences of a combination of ">" and "<" in command
+	---> -1 if there is only one occurrence of "<" in command
+	---> 1 if there is only one occurrence of ">" in command
+	---> 0 if there are no occurrences of either "<" or ">" in command
+	---> 2 if there are 2 or more occurrences of a combination of ">" and "<" in command
 	Counts the number of occurrences of "<" and ">" in command
 	
 	-int isExit(char *command);
